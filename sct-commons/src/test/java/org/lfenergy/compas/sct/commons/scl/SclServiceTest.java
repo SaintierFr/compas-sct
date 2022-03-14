@@ -319,6 +319,14 @@ class SclServiceTest {
     }
 
     @Test
+    void testInitScl_With_hId_shouldNotThrowError(){
+        UUID hid = UUID.randomUUID();
+        assertDoesNotThrow(
+                () -> SclService.initScl(hid,"hVersion","hRevision")
+        );
+    }
+
+    @Test
     void testUpdateHeader() {
 
         SclRootAdapter sclRootAdapter = assertDoesNotThrow(

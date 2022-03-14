@@ -52,6 +52,10 @@ public class SclService {
         return new SclRootAdapter(hId.toString(),hVersion,hRevision);
     }
 
+    public static SclRootAdapter initScl(UUID hId, String hVersion, String hRevision) throws ScdException {
+        return new SclRootAdapter(hId.toString(), hVersion, hRevision);
+    }
+
     public static SclRootAdapter addHistoryItem(SCL scd, String who, String what, String why){
         SclRootAdapter sclRootAdapter = new SclRootAdapter(scd);
         HeaderAdapter headerAdapter = sclRootAdapter.getHeaderAdapter();
