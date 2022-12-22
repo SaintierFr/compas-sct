@@ -10,32 +10,81 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.lfenergy.compas.scl2007b4.model.TDO;
 import org.lfenergy.compas.scl2007b4.model.TLNodeType;
 import org.lfenergy.compas.scl2007b4.model.TPredefinedBasicTypeEnum;
-import org.lfenergy.compas.scl2007b4.model.TPrivate;
 import org.lfenergy.compas.sct.commons.dto.DaTypeName;
 import org.lfenergy.compas.sct.commons.dto.DoTypeName;
+import org.lfenergy.compas.sct.commons.dto.ExtRefSignalInfo;
 import org.lfenergy.compas.sct.commons.dto.ResumedDataTemplate;
 import org.lfenergy.compas.sct.commons.exception.ScdException;
 import org.lfenergy.compas.sct.commons.scl.SclElementAdapter;
+import org.lfenergy.compas.sct.commons.util.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * A representation of the model object
+ * <em><b>{@link org.lfenergy.compas.scl2007b4.model.TLNodeType LNodeType}</b></em>.
+ * <p>
+ * The following features are supported:
+ * </p>
+ * <ol>
+ *   <li>Adapter</li>
+ *    <ul>
+ *       <li>{@link LNodeTypeAdapter#getDataTypeTemplateAdapter() <em>Returns the value of the <b>DataTypeTemplateAdapter </b>reference object</em>}</li>
+ *       <li>{@link LNodeTypeAdapter#getDOAdapterByName <em>Returns the value of the <b>DOAdapter </b> by <b>DO </b> name </em>}</li>
+ *    </ul>
+ *   <li>Principal functions</li>
+ *    <ul>
+ *      <li>{@link LNodeTypeAdapter#addPrivate <em>Add <b>TPrivate </b>under this object</em>}</li>
+ *      <li>{@link LNodeTypeAdapter#getDOTypeId <em>Returns the value of the <b>type </b>attribute By DOType Id</em>}</li>
+ *      <li>{@link LNodeTypeAdapter#getId() <em>Returns the value of the <b>id </b>attribute</em>}</li>
+ *      <li>{@link LNodeTypeAdapter#getLNClass <em>Returns the value of the <b>lnClass </b>attribute</em>}</li>
+ *      <li>{@link LNodeTypeAdapter#getResumedDTTs <em>Returns <b>ResumedDataTemplate </b> list</em>}</li>
+ *    </ul>
+ *   <li>Checklist functions</li>
+ *    <ul>
+ *       <li>{@link LNodeTypeAdapter#hasSameContentAs <em>Compare Two TLNodeType</em>}</li>
+ *       <li>{@link LNodeTypeAdapter#containsDOWithDOTypeId <em>Check whether TLNodeType contain TDO By Id</em>}</li>
+ *    </ul>
+ * </ol>
+ */
 @Slf4j
 public class LNodeTypeAdapter
         extends SclElementAdapter <DataTypeTemplateAdapter, TLNodeType>
         implements IDataTemplate,IDTTComparable<TLNodeType> {
 
+    /**
+     * Constructor
+     * @param parentAdapter Parent container reference
+     * @param currentElem Current reference
+     */
     public LNodeTypeAdapter(DataTypeTemplateAdapter parentAdapter, TLNodeType currentElem) {
         super(parentAdapter, currentElem);
     }
 
+    /**
+     * Check if node is child of the reference node
+     * @return link parent child existence
+     */
     @Override
     protected boolean amChildElementRef() {
         return parentAdapter.getCurrentElem().getLNodeType().contains(currentElem);
     }
 
+    @Override
+    protected String elementXPath() {
+        return String.format("LNodeType[%s and %s]",
+                Utils.xpathAttributeFilter("id", currentElem.isSetId() ? currentElem.getId() : null),
+                Utils.xpathAttributeFilter("lnClass", currentElem.isSetLnClass() ? currentElem.getLnClass() : null));
+    }
+
+    /**
+     * Compares current LNodeType and given LNodeType
+     * @param tlNodeType LNodeType to compare with
+     * @return <em>Boolean</em> value of comparison result
+     */
     @Override
     public boolean hasSameContentAs(TLNodeType tlNodeType) {
 
@@ -69,22 +118,32 @@ public class LNodeTypeAdapter
         return true;
     }
 
-    @Override
-    protected void addPrivate(TPrivate tPrivate) {
-        currentElem.getPrivate().add(tPrivate);
-    }
-
+    /**
+     * Checks if current LNodeType contains DO with specific DOTYpe ID
+     * @param doTypeId ID of DOType in DO to check
+     * @return <em>Boolean</em> value of check result
+     */
     public boolean containsDOWithDOTypeId(String doTypeId) {
         return currentElem.getDO().stream()
                 .anyMatch(tdo -> tdo.getType().equals(doTypeId));
     }
 
+    /**
+     * Gets LnClass value
+     * @return LnClass Value
+     */
     public String getLNClass() {
         if(!currentElem.getLnClass().isEmpty()){
             return currentElem.getLnClass().get(0);
         }
         return null;
     }
+
+    /**
+     * Gets DOType ID from current LNodeType
+     * @param doName name of DO for which ID is search
+     * @return optional of <em>Boolean</em> value
+     */
     public Optional<String> getDOTypeId(String doName){
         return currentElem.getDO()
                 .stream()
@@ -93,6 +152,12 @@ public class LNodeTypeAdapter
                 .findFirst();
     }
 
+    /**
+     * return a list of summarized Resumed Data Type Templates beginning from given this LNodeType.
+     * @apiNote This method doesn't check relationship between DO/SDO and DA. Check should be done by caller
+     * @param filter filter for LNodeType
+     * @return list of completed Resumed Data Type Templates beginning from this LNodeType.
+     */
     public List<ResumedDataTemplate> getResumedDTTs(@NonNull ResumedDataTemplate filter)  {
 
         List<ResumedDataTemplate> resumedDataTemplates = new ArrayList<>();
@@ -128,12 +193,20 @@ public class LNodeTypeAdapter
         return resumedDataTemplates;
     }
 
-
+    /**
+     * Gets linked DataTypeTemplateAdapter as parent
+     * @return <em>DataTypeTemplateAdapter</em> object
+     */
     @Override
     public DataTypeTemplateAdapter getDataTypeTemplateAdapter() {
         return parentAdapter;
     }
 
+    /**
+     * Gets DO from current LNodeType
+     * @param name name of DO to find
+     * @return optional of <em>DOAdapter</em> adapter
+     */
     public Optional<DOAdapter> getDOAdapterByName(String name) {
         for(TDO tdo : currentElem.getDO()){
             if(tdo.getName().equals(name)){
@@ -143,17 +216,31 @@ public class LNodeTypeAdapter
         return Optional.empty();
     }
 
+    /**
+     * Find path from a DO to DA (defined by names)
+     * @param doName DO from which find a path
+     * @param daName DA for which find a path to
+     * @return pair of DO name and  DOType.
+     * @throws ScdException when inconsistency are found in th SCL's
+     *                     DataTypeTemplate (unknown reference for example). Which should normally not happens.
+     */
     Pair<String,DOTypeAdapter> findPathFromDo2DA(String doName, String daName) throws ScdException {
         DOAdapter doAdapter = getDOAdapterByName(doName).orElseThrow();
         DOTypeAdapter doTypeAdapter = doAdapter.getDoTypeAdapter().orElseThrow();
         if(doTypeAdapter.containsDAWithDAName(doName)){
             return Pair.of(doName,doTypeAdapter);
         }
-        return doTypeAdapter.findPathDoType2DA(daName);
+        return doTypeAdapter.findPathDoTypeToDA(daName);
     }
 
 
-
+    /**
+     * Check if DoTypeName and DaTypeName are correct and coherent with this LNodeTypeAdapter
+     * @param doTypeName DO/SDO to check
+     * @param daTypeName DA/BDA to check
+     * @throws ScdException when inconsistency are found in th SCL's
+     *                     DataTypeTemplate (unknown reference for example). Which should normally not happens.
+     */
     public void check(@NonNull DoTypeName doTypeName, @NonNull DaTypeName daTypeName) throws ScdException {
         if(!doTypeName.isDefined() || !daTypeName.isDefined() ){
             throw new ScdException("Invalid Data: data attributes information are missing");
@@ -181,7 +268,7 @@ public class LNodeTypeAdapter
             if(adapterPair.getRight().containsDAWithDAName(daTypeName.getName())){
                 lastDoTypeAdapter = adapterPair.getValue();
             } else {
-                adapterPair = adapterPair.getRight().findPathDoType2DA(daTypeName.getName());
+                adapterPair = adapterPair.getRight().findPathDoTypeToDA(daTypeName.getName());
                 lastDoTypeAdapter = adapterPair.getValue();
             }
         }
@@ -211,7 +298,11 @@ public class LNodeTypeAdapter
         }
     }
 
-
+    /**
+     * Gets list of summarized data type template from DaTypeName
+     * @param daTypeName DaTypeName from which summarized data type templates are created
+     * @return list of <em>ResumedDataTemplate</em> object
+     */
     public List<ResumedDataTemplate> getResumedDTTByDaName(DaTypeName daTypeName) throws ScdException {
         Optional<ResumedDataTemplate> opRDtt;
         List<ResumedDataTemplate> rDtts = new ArrayList<>();
@@ -230,6 +321,11 @@ public class LNodeTypeAdapter
         return rDtts;
     }
 
+    /**
+     * Gets list of summarized data type template from DoTypeName
+     * @param doTypeName DoTypeName from which summarized data type templates are created
+     * @return list of <em>ResumedDataTemplate</em> object
+     */
     public List<ResumedDataTemplate> getResumedDTTByDoName(DoTypeName doTypeName) {
 
 
@@ -241,7 +337,28 @@ public class LNodeTypeAdapter
 
     }
 
+    /**
+     * Gets current LNodeType ID
+     * @return LNodeType ID
+     */
     public String getId() {
         return currentElem.getId();
+    }
+
+    /**
+     * Find binded DOType info
+     * @param signalInfo
+     * @return DOType info as object contening name, id and adapter
+     * @throws ScdException throws when DO unknown
+     */
+    public DataTypeTemplateAdapter.DOTypeInfo findMatchingDOType(ExtRefSignalInfo signalInfo)  throws ScdException{
+        DoTypeName doName = new DoTypeName(signalInfo.getPDO());
+        String extDoName = doName.getName();
+        String doTypeId = getDOTypeId(extDoName).orElseThrow(() ->
+                new IllegalArgumentException("Unknown doName :" + signalInfo.getPDO()));
+        DOTypeAdapter doTypeAdapter = this.getParentAdapter().getDOTypeAdapterById(doTypeId).orElseThrow(() ->
+                new IllegalArgumentException(String.format("%s: No referenced to DO id : %s, scl file not valid", doName, doTypeId)));
+        doTypeAdapter.checkAndCompleteStructData(doName);
+        return new DataTypeTemplateAdapter.DOTypeInfo(doName, doTypeId, doTypeAdapter);
     }
 }

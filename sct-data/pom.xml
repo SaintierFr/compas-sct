@@ -14,13 +14,13 @@
         <version>local-SNAPSHOT</version>
     </parent>
 
-    <groupId>org.lfenergy.compas</groupId>
     <artifactId>sct-data</artifactId>
     <version>local-SNAPSHOT</version>
     <name>SCT-DATA</name>
 
     <properties>
         <sonar.coverage.jacoco.xmlReportPaths>${basedir}/${aggregate.report.dir}</sonar.coverage.jacoco.xmlReportPaths>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
     </properties>
 
     <dependencies>
@@ -39,4 +39,12 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>

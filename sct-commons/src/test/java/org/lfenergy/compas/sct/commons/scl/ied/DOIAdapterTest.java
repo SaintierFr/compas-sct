@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DOIAdapterTest {
@@ -77,7 +78,7 @@ class DOIAdapterTest {
         assertDoesNotThrow(() -> daiAdapter.update(vals));
         assertFalse(daiAdapter.getCurrentElem().getVal().isEmpty());
         TVal tVal = daiAdapter.getCurrentElem().getVal().get(0);
-        assertNull(tVal.getSGroup());
+        assertFalse(tVal.isSetSGroup());
 
         final Map<Long,String > vals2 = new HashMap<>();
         vals2.put(1L,TOTO);
@@ -85,7 +86,7 @@ class DOIAdapterTest {
         assertDoesNotThrow(() -> daiAdapter.update(vals2));
         assertFalse(daiAdapter.getCurrentElem().getVal().isEmpty());
         tVal = daiAdapter.getCurrentElem().getVal().get(0);
-        assertNull(tVal.getSGroup());
+        assertFalse(tVal.isSetSGroup());
     }
 
     @Test
@@ -110,7 +111,7 @@ class DOIAdapterTest {
         SCL scd = SclTestMarshaller.getSCLFromFile("/ied-test-schema-conf/ied_unit_test.xml");
         SclRootAdapter sclRootAdapter = new SclRootAdapter(scd);
         IEDAdapter iAdapter = assertDoesNotThrow(() -> sclRootAdapter.getIEDAdapterByName("IED_NAME"));
-        LDeviceAdapter lDeviceAdapter = assertDoesNotThrow(()-> iAdapter.getLDeviceAdapterByLdInst("LD_INS1").get());
+        LDeviceAdapter lDeviceAdapter = assertDoesNotThrow(()-> iAdapter.findLDeviceAdapterByLdInst("LD_INS1").get());
         LN0Adapter ln0Adapter = lDeviceAdapter.getLN0Adapter();
         DOIAdapter doiAdapter = assertDoesNotThrow(()-> ln0Adapter.getDOIAdapterByName("Do"));
         DoTypeName doTypeName = new DoTypeName("Do.sdo1.d");
@@ -156,4 +157,30 @@ class DOIAdapterTest {
         daiAdapter.addPrivate(tPrivate);
         assertEquals(1, daiAdapter.getCurrentElem().getPrivate().size());
     }
+
+    @Test
+    void elementXPath_doi() {
+        // Given
+        TDOI tdoi = new TDOI();
+        tdoi.setName("doName");
+        DOIAdapter doiAdapter = new DOIAdapter(null,new TDOI());
+        DOIAdapter namedDoiAdapter = new DOIAdapter(null,tdoi);
+        // When
+        String elementXPathResult = doiAdapter.elementXPath();
+        String namedElementXPathResult = namedDoiAdapter.elementXPath();
+        // Then
+        assertThat(elementXPathResult).isEqualTo("DOI[not(@name)]");
+        assertThat(namedElementXPathResult).isEqualTo("DOI[@name=\"doName\"]");
+    }
+
+    @Test
+    void elementXPath_dai() {
+        // Given
+        DOIAdapter.DAIAdapter daiAdapter = initInnerDAIAdapter("Do","da");
+        // When
+        String result = daiAdapter.elementXPath();
+        // Then
+        assertThat(result).isEqualTo("DAI[@name=\"da\"]");
+    }
+
 }

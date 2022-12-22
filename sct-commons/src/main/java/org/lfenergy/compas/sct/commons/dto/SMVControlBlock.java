@@ -7,18 +7,35 @@ package org.lfenergy.compas.sct.commons.dto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.lfenergy.compas.scl2007b4.model.TMcSecurity;
-import org.lfenergy.compas.scl2007b4.model.TPredefinedTypeOfSecurityEnum;
-import org.lfenergy.compas.scl2007b4.model.TProtocol;
-import org.lfenergy.compas.scl2007b4.model.TSampledValueControl;
-import org.lfenergy.compas.scl2007b4.model.TServiceType;
-import org.lfenergy.compas.scl2007b4.model.TServices;
-import org.lfenergy.compas.scl2007b4.model.TSmpMod;
+import org.lfenergy.compas.scl2007b4.model.*;
 import org.lfenergy.compas.sct.commons.exception.ScdException;
 
 import java.util.Collections;
 
 
+/**
+ * A representation of the model object <em><b>SMVControlBlock</b></em>.
+ * <p>
+ * The following features are supported:
+ * </p>
+ * <ul>
+ *   <li>{@link SMVControlBlock#getId <em>smvID</em>}</li>
+ *   <li>{@link SMVControlBlock#getName <em>Name</em>}</li>
+ *   <li>{@link SMVControlBlock#getDataSetRef <em>dataSetRef</em>}</li>
+ *   <li>{@link SMVControlBlock#getDesc <em>Desc</em>}</li>
+ *   <li>{@link SMVControlBlock#getConfRev <em>Refers To confRev</em>}</li>
+ *   <li>{@link SMVControlBlock#getIedNames <em>Refers To IedNames</em>}</li>
+ *   <li>{@link SMVControlBlock#getSecurityEnable <em>Refers To securityEnable</em>}</li>
+ *   <li>{@link SMVControlBlock#getSmvOpts <em>Refers To smvOpts</em>}</li>
+ *   <li>{@link SMVControlBlock#getProtocol <em>Refers To protocol</em>}</li>
+ *   <li>{@link SMVControlBlock#isMulticast <em>Refers To multicast</em>}</li>
+ *   <li>{@link SMVControlBlock#getSmpRate <em>Refers To smpRate</em>}</li>
+ *   <li>{@link SMVControlBlock#getNofASDU <em>Refers To nofASDU</em>}</li>
+ *   <li>{@link SMVControlBlock#getSmpMod <em>Refers To smpMod</em>}</li>
+ * </ul>
+ *
+ * @see org.lfenergy.compas.scl2007b4.model.TSampledValueControl
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,14 +48,15 @@ public class SMVControlBlock extends ControlBlock<SMVControlBlock>{
     private Long nofASDU;
     private TSmpMod smpMod = TSmpMod.SMP_PER_PERIOD;
 
-
+    /**
+     * Constructor
+     * @param tSampledValueControl input
+     */
     public SMVControlBlock(TSampledValueControl tSampledValueControl) {
         super();
         this.id = tSampledValueControl.getSmvID();
         this.name = tSampledValueControl.getName();
-        if(tSampledValueControl.getConfRev() != null) {
-            this.confRev = tSampledValueControl.getConfRev();
-        }
+        this.confRev = tSampledValueControl.isSetConfRev() ? tSampledValueControl.getConfRev() : null;
         this.desc = tSampledValueControl.getDesc();
         this.dataSetRef = tSampledValueControl.getDatSet();
         Collections.copy(iedNames, tSampledValueControl.getIEDName());
@@ -51,16 +69,29 @@ public class SMVControlBlock extends ControlBlock<SMVControlBlock>{
         securityEnable = tSampledValueControl.getSecurityEnable();
     }
 
+    /**
+     * Gets SMV Control Block Class Type value
+     * @return SMVControlBlock.class
+     */
     @Override
     protected Class<SMVControlBlock> getClassType() {
         return SMVControlBlock.class;
     }
 
+    /**
+     * Gets SMV Control Block Service Type value
+     * @return SMV
+     */
     @Override
     public TServiceType getServiceType() {
         return TServiceType.SMV;
     }
 
+    /**
+     * Validates Security Enabled parameter value
+     * @param tServices Service object
+     * @throws ScdException
+     */
     @Override
     protected void validateSecurityEnabledValue(TServices tServices) throws ScdException {
         if(tServices == null ||
@@ -78,6 +109,10 @@ public class SMVControlBlock extends ControlBlock<SMVControlBlock>{
         }
     }
 
+    /**
+     * Validates SMV Control Block
+     * @throws ScdException
+     */
     @Override
     public void validateCB() throws ScdException {
         super.validateCB();
@@ -94,6 +129,10 @@ public class SMVControlBlock extends ControlBlock<SMVControlBlock>{
         }
     }
 
+    /**
+     * Creates SMV Control Block
+     * @return TSampledValueControl object
+     */
     @Override
     public TSampledValueControl createControlBlock() {
 

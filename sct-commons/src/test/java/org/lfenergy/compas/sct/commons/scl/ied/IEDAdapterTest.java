@@ -13,15 +13,19 @@ import org.lfenergy.compas.sct.commons.dto.ReportControlBlock;
 import org.lfenergy.compas.sct.commons.exception.ScdException;
 import org.lfenergy.compas.sct.commons.scl.ObjectReference;
 import org.lfenergy.compas.sct.commons.scl.SclRootAdapter;
-import org.lfenergy.compas.sct.commons.testhelpers.MarshallerWrapper;
 import org.lfenergy.compas.sct.commons.testhelpers.SclTestMarshaller;
 import org.mockito.Mockito;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.lfenergy.compas.sct.commons.testhelpers.SclTestMarshaller.assertIsMarshallable;
 
 class IEDAdapterTest {
 
@@ -51,21 +55,64 @@ class IEDAdapterTest {
 
     }
 
-
     @Test
-    void testGetLDeviceAdapters() throws Exception {
+    void streamLDeviceAdapters_should_return_all_lDevices() throws Exception {
+        // Given
         SCL scd = SclTestMarshaller.getSCLFromFile(SCD_IED_U_TEST);
         SclRootAdapter sclRootAdapter = new SclRootAdapter(scd);
-        IEDAdapter iAdapter = assertDoesNotThrow( () -> sclRootAdapter.getIEDAdapterByName("IED_NAME"));
-        assertFalse(iAdapter.getLDeviceAdapters().isEmpty());
+        IEDAdapter iAdapter = sclRootAdapter.getIEDAdapterByName("IED_NAME");
+        // When
+        Stream<LDeviceAdapter> result = iAdapter.streamLDeviceAdapters();
+        // Then
+        assertThat(result).hasSize(3);
     }
 
     @Test
-    void testGetLDeviceAdapterByLdInst() throws Exception {
+    void findLDeviceAdapterByLdInst_should_return_LDevice() throws Exception {
+        // Given
         SCL scd = SclTestMarshaller.getSCLFromFile(SCD_IED_U_TEST);
         SclRootAdapter sclRootAdapter = new SclRootAdapter(scd);
-        IEDAdapter iAdapter = assertDoesNotThrow( () -> sclRootAdapter.getIEDAdapterByName("IED_NAME"));
-        assertTrue(iAdapter.getLDeviceAdapterByLdInst("LD_INS1").isPresent());
+        IEDAdapter iAdapter = sclRootAdapter.getIEDAdapterByName("IED_NAME");
+        // When
+        Optional<LDeviceAdapter> result = iAdapter.findLDeviceAdapterByLdInst("LD_INS1");
+        // Then
+        assertThat(result.map(LDeviceAdapter::getInst)).hasValue("LD_INS1");
+    }
+
+    @Test
+    void findLDeviceAdapterByLdInst_when_not_found_should_return_empty_optional() throws Exception {
+        // Given
+        SCL scd = SclTestMarshaller.getSCLFromFile(SCD_IED_U_TEST);
+        SclRootAdapter sclRootAdapter = new SclRootAdapter(scd);
+        IEDAdapter iAdapter = sclRootAdapter.getIEDAdapterByName("IED_NAME");
+        // When
+        Optional<LDeviceAdapter> result = iAdapter.findLDeviceAdapterByLdInst("NOT_EXISTING");
+        // Then
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void getLDeviceAdapterByLdInst_should_return_LDevice() throws Exception {
+        // Given
+        SCL scd = SclTestMarshaller.getSCLFromFile(SCD_IED_U_TEST);
+        SclRootAdapter sclRootAdapter = new SclRootAdapter(scd);
+        IEDAdapter iAdapter = sclRootAdapter.getIEDAdapterByName("IED_NAME");
+        // When
+        LDeviceAdapter result = iAdapter.getLDeviceAdapterByLdInst("LD_INS1");
+        // Then
+        assertThat(result.getInst()).isEqualTo("LD_INS1");
+    }
+
+    @Test
+    void getLDeviceAdapterByLdInst_when_not_found_should_throw_exception() throws Exception {
+        // Given
+        SCL scd = SclTestMarshaller.getSCLFromFile(SCD_IED_U_TEST);
+        SclRootAdapter sclRootAdapter = new SclRootAdapter(scd);
+        IEDAdapter iAdapter = sclRootAdapter.getIEDAdapterByName("IED_NAME");
+        // When & Then
+        assertThatThrownBy(() -> iAdapter.getLDeviceAdapterByLdInst("NOT_EXISTING"))
+            .isInstanceOf(ScdException.class)
+            .hasMessage("LDevice.inst 'NOT_EXISTING' not found in IED 'IED_NAME'");
     }
 
     @Test
@@ -75,13 +122,13 @@ class IEDAdapterTest {
         SclRootAdapter sclRootAdapter = new SclRootAdapter(scd);
         IEDAdapter iAdapter = assertDoesNotThrow( () -> sclRootAdapter.getIEDAdapterByName(DTO.HOLDER_IED_NAME));
 
-        assertTrue(iAdapter.getLDeviceAdapters().size() >= 2);
+        assertTrue(iAdapter.streamLDeviceAdapters().count() >= 2);
         Map<String,String> pairOldNewId = new HashMap<>();
         pairOldNewId.put("LNO1", DTO.HOLDER_IED_NAME + "_LNO1");
         pairOldNewId.put("LNO2", DTO.HOLDER_IED_NAME + "_LNO2");
         assertDoesNotThrow( () ->iAdapter.updateLDeviceNodesType(pairOldNewId));
 
-        LDeviceAdapter lDeviceAdapter = iAdapter.getLDeviceAdapters().get(0);
+        LDeviceAdapter lDeviceAdapter = iAdapter.streamLDeviceAdapters().findFirst().get();
         assertEquals(DTO.HOLDER_IED_NAME + "_LNO1",lDeviceAdapter.getLN0Adapter().getLnType());
     }
 
@@ -155,8 +202,7 @@ class IEDAdapterTest {
         dataSetInfo.setHolderLnClass(TLLN0Enum.LLN_0.value());
         assertDoesNotThrow(() -> iAdapter.createDataSet(dataSetInfo));
 
-        MarshallerWrapper marshallerWrapper = SclTestMarshaller.createWrapper();
-        System.out.println(marshallerWrapper.marshall(scd));
+        assertIsMarshallable(scd);
     }
 
     @Test
@@ -227,6 +273,7 @@ class IEDAdapterTest {
         controlBlock.setHolderIEDName("IED_NAME");
         controlBlock.setHolderIEDName("IED_NAME");
         controlBlock.setHolderIEDName("IED_NAME");
+        assertIsMarshallable(scd);
     }
 
     @Test
@@ -244,4 +291,21 @@ class IEDAdapterTest {
         iAdapter.addPrivate(tPrivate);
         assertEquals(1, iAdapter.getCurrentElem().getPrivate().size());
     }
+
+    @Test
+    void elementXPath() {
+        // Given
+        SclRootAdapter sclRootAdapter = Mockito.mock(SclRootAdapter.class);
+        SCL scl = Mockito.mock(SCL.class);
+        Mockito.when(sclRootAdapter.getCurrentElem()).thenReturn(scl);
+        TIED tied = new TIED();
+        tied.setName("iedName");
+        Mockito.when(scl.getIED()).thenReturn(List.of(tied));
+        IEDAdapter iAdapter = new IEDAdapter(sclRootAdapter, tied);
+        // When
+        String result = iAdapter.elementXPath();
+        // Then
+        assertThat(result).isEqualTo("IED[@name=\"iedName\"]");
+    }
+
 }

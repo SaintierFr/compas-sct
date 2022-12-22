@@ -5,16 +5,39 @@
 package org.lfenergy.compas.sct.commons.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.apache.commons.lang3.StringUtils;
 import org.lfenergy.compas.scl2007b4.model.TFCDA;
 import org.lfenergy.compas.scl2007b4.model.TFCEnum;
 
+import java.util.Objects;
+
+import static org.lfenergy.compas.sct.commons.util.Utils.equalsOrBothBlank;
+
+/**
+ * A representation of the model object <em><b>FCDA</b></em>.
+ *
+ * <p>
+ * The following features are supported:
+ * </p>
+ * <ul>
+ *   <li>{@link FCDAInfo#getDaName <em>Da Name</em>}</li>
+ *   <li>{@link FCDAInfo#getDoName <em>Do Name</em>}</li>
+ *   <li>{@link FCDAInfo#getFc <em>Fc</em>}</li>
+ *   <li>{@link FCDAInfo#getIx  em>Ix</em>}</li>
+ *   <li>{@link FCDAInfo#getLdInst <em>Ld Inst</em>}</li>
+ *   <li>{@link FCDAInfo#getLnClass <em>Ln Class</em>}</li>
+ *   <li>{@link FCDAInfo#getLnInst <em>Ln Inst</em>}</li>
+ *   <li>{@link FCDAInfo#getPrefix <em>Prefix</em>}</li>
+ * </ul>
+ *
+ * @see org.lfenergy.compas.scl2007b4.model.TFCDA
+ */
 @Getter
 @Setter
+@AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class FCDAInfo {
 
     private String dataSet;
@@ -28,8 +51,17 @@ public class FCDAInfo {
     private DaTypeName daName; //daName.[...bdaNames]
     private Long ix;
 
+    /**
+     * Constructor
+     * @param dataSet input
+     * @param tfcda input
+     */
     public FCDAInfo(String dataSet, TFCDA tfcda) {
+        this(tfcda);
         this.dataSet = dataSet;
+    }
+
+    public FCDAInfo(TFCDA tfcda) {
         fc = tfcda.getFc();
         ldInst = tfcda.getLdInst();
         prefix = tfcda.getPrefix();
@@ -39,10 +71,13 @@ public class FCDAInfo {
         lnInst = tfcda.getLnInst();
         doName = new DoTypeName(tfcda.getDoName());
         daName = new DaTypeName(tfcda.getDaName());
-        ix = tfcda.getIx();
+        ix = tfcda.isSetIx() ? tfcda.getIx() : null;
     }
 
-
+    /**
+     * Gets FCDA
+     * @return FCDA object
+     */
     @JsonIgnore
     public TFCDA getFCDA(){
         TFCDA tfcda = new TFCDA();
@@ -72,7 +107,25 @@ public class FCDAInfo {
         return tfcda;
     }
 
+    /**
+     * Checks FCDAInfo validity
+     * @return validity state
+     */
     public boolean isValid() {
         return doName != null && doName.isDefined();
+    }
+
+    /**
+     * Checks if two FCDAInfo object match for ldInst, lnInst, lnClass, lnPrefix doName and daName for search of binding control blocks
+     * @param fcdaInfo FCDA to copare with
+     * @return true if FCDAs match for binding, otherwise false
+     */
+    public boolean checkFCDACompatibilitiesForBinding(FCDAInfo fcdaInfo) {
+        return  equalsOrBothBlank(getLdInst(), fcdaInfo.getLdInst())
+                && equalsOrBothBlank(getPrefix(), fcdaInfo.getPrefix())
+                && equalsOrBothBlank(getLnClass(), fcdaInfo.getLnClass())
+                && equalsOrBothBlank(getLnInst(), fcdaInfo.getLnInst())
+                && Objects.equals(getDoName(), fcdaInfo.getDoName())
+                && Objects.equals(getDaName(), fcdaInfo.getDaName());
     }
 }

@@ -20,7 +20,8 @@
     <properties>
         <sonar.coverage.jacoco.xmlReportPaths>${basedir}/${aggregate.report.dir}</sonar.coverage.jacoco.xmlReportPaths>
         <sonar.jacoco.excludes>**/scl2007b4/**/*</sonar.jacoco.excludes>
-        <assertJ.version>3.22.0</assertJ.version>
+        <opencsv.version>5.7.1</opencsv.version>
+        <mockito.version>4.9.0</mockito.version>
     </properties>
 
     <dependencies>
@@ -32,7 +33,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.11</version>
+            <version>3.12.0</version>
         </dependency>
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
@@ -74,25 +75,20 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>3.6.28</version>
+            <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-inline</artifactId>
-            <version>4.0.0</version>
+            <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
-            <version>3.6.28</version>
+            <version>${mockito.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-yaml</artifactId>
-            <version>2.12.3</version>
         </dependency>
         <dependency>
             <groupId>jakarta.annotation</groupId>
@@ -108,19 +104,20 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>${assertJ.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>${opencsv.version}</version>
+        </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>11</source>
-                    <target>11</target>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -153,6 +150,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.3.0</version>
                 <executions>
                     <execution>
                         <id>unpack</id>
@@ -166,12 +164,10 @@
                                 <artifactItem>
                                     <groupId>org.lfenergy.compas.xsd</groupId>
                                     <artifactId>compas-scl-xsd</artifactId>
-                                    <version>0.0.4</version>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>org.lfenergy.compas.core</groupId>
                                     <artifactId>scl-extension</artifactId>
-                                    <version>0.8.0</version>
                                 </artifactItem>
                             </artifactItems>
                             <outputDirectory>${project.build.directory}</outputDirectory>
@@ -196,6 +192,9 @@
                         <source>${project.build.directory}/xsd/SCL2007B4/SCL.xsd</source>
                         <source>${project.build.directory}/xsd/SCL_CoMPAS.xsd</source>
                     </sources>
+                    <xjbSources>
+                        <xjbSource>${project.basedir}/src/main/resources/binding_configuration.xjb</xjbSource>
+                    </xjbSources>
                     <packageName>org.lfenergy.compas.scl2007b4.model</packageName>
                     <noPackageLevelAnnotations>true</noPackageLevelAnnotations>
                 </configuration>
@@ -211,7 +210,10 @@
                     </execution>
                 </executions>
             </plugin>
-
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
         </plugins>
     </build>
 </project>
