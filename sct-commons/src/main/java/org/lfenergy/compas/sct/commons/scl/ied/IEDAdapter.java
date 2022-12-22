@@ -295,9 +295,9 @@ public class IEDAdapter extends SclElementAdapter<SclRootAdapter, TIED> {
      * @throws ScdException throws when IED is not able to add DataSet
      */
     public void createDataSet(DataSetInfo dataSetInfo) throws ScdException {
-        if(!hasDataSetCreationCapability()){
+       /* if(!hasDataSetCreationCapability()){
             throw new ScdException("The capability of IED is not allowing DataSet creation");
-        }
+        }*/
 
         LDeviceAdapter lDeviceAdapter = findLDeviceAdapterByLdInst(dataSetInfo.getHolderLDInst())
             .orElseThrow(
@@ -319,32 +319,55 @@ public class IEDAdapter extends SclElementAdapter<SclRootAdapter, TIED> {
      * Checks if IED is able to create new Data Set
      * @return <em>Boolean</em> value of check result
      */
-    protected boolean hasDataSetCreationCapability() {
-        if(currentElem.getServices() == null){
-            return false ;
+    protected boolean hasDataSetCreationCapability(TServiceSettings serviceSettings) {
+        if (currentElem.getAccessPoint().isEmpty()) {
+            return false;
         }
-        boolean hasCapability = false;
-        if(currentElem.getServices().getLogSettings() != null){
-            hasCapability = (TServiceSettingsEnum.CONF.equals(currentElem.getServices().getLogSettings().getDatSet()) ||
-                        TServiceSettingsEnum.DYN.equals(currentElem.getServices().getLogSettings().getDatSet()));
-        }
-        if(currentElem.getServices().getGSESettings() != null){
-            hasCapability = hasCapability ||
-                    (TServiceSettingsEnum.CONF.equals(currentElem.getServices().getGSESettings().getDatSet()) ||
-                        TServiceSettingsEnum.DYN.equals(currentElem.getServices().getGSESettings().getDatSet()));
+        return switch (serviceSettings) {
+            case null -> isSettingsDatSetConfOrDyn(getLogSettingsEnumStream()) &&
+                    isSettingsDatSetConfOrDyn(getReportSettingsEnumStream()) &&
+                    isSettingsDatSetConfOrDyn(getGseSettingsEnumStream()) &&
+                    isSettingsDatSetConfOrDyn(getSmvSettingsEnumStream());
+            case TLogSettings ignored -> isSettingsDatSetConfOrDyn(getLogSettingsEnumStream());
+            case TReportSettings ignored -> isSettingsDatSetConfOrDyn(getReportSettingsEnumStream());
+            case TGSESettings ignored -> isSettingsDatSetConfOrDyn(getGseSettingsEnumStream());
+            case TSMVSettings ignored -> isSettingsDatSetConfOrDyn(getSmvSettingsEnumStream());
+            default -> false;
+        };
+    }
 
-        }
-        if(currentElem.getServices().getReportSettings() != null){
-            hasCapability = hasCapability ||
-                    (TServiceSettingsEnum.CONF.equals(currentElem.getServices().getReportSettings().getDatSet()) ||
-                            TServiceSettingsEnum.DYN.equals(currentElem.getServices().getReportSettings().getDatSet()));
-        }
-        if(currentElem.getServices().getSMVSettings() != null){
-            hasCapability = hasCapability ||
-                    (TServiceSettingsEnum.CONF.equals(currentElem.getServices().getSMVSettings().getDatSet()) ||
-                            TServiceSettingsEnum.DYN.equals(currentElem.getServices().getSMVSettings().getDatSet()));
-        }
-        return hasCapability ;
+    private Stream<TServices> getServicesStream() {
+        return currentElem.getAccessPoint().stream()
+                .filter(ap -> ap != null && ap.getServices() != null)
+                .map(TAccessPoint::getServices);
+    }
+
+    private Stream<TServiceSettingsEnum> getLogSettingsEnumStream() {
+        return getServicesStream()
+                .filter(TServices::isSetLogSettings)
+                .map(t -> t.getLogSettings().getDatSet());
+    }
+
+    private Stream<TServiceSettingsEnum> getReportSettingsEnumStream() {
+        return getServicesStream()
+                .filter(TServices::isSetReportSettings)
+                .map(t -> t.getReportSettings().getDatSet());
+    }
+
+    private Stream<TServiceSettingsEnum> getGseSettingsEnumStream() {
+        return getServicesStream()
+                .filter(TServices::isSetGSESettings)
+                .map(t -> t.getGSESettings().getDatSet());
+    }
+
+    private Stream<TServiceSettingsEnum> getSmvSettingsEnumStream() {
+        return getServicesStream()
+                .filter(TServices::isSetSMVSettings)
+                .map(t -> t.getSMVSettings().getDatSet());
+    }
+
+    private boolean isSettingsDatSetConfOrDyn(Stream<TServiceSettingsEnum> stream) {
+        return stream.anyMatch(datSet -> TServiceSettingsEnum.CONF.equals(datSet) || TServiceSettingsEnum.DYN.equals(datSet));
     }
 
     /**
