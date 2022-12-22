@@ -18,7 +18,6 @@
     <name>SCT-COMMONS</name>
 
     <properties>
-        <sonar.coverage.jacoco.xmlReportPaths>${basedir}/${aggregate.report.dir}</sonar.coverage.jacoco.xmlReportPaths>
         <sonar.jacoco.excludes>**/scl2007b4/**/*</sonar.jacoco.excludes>
         <opencsv.version>5.7.1</opencsv.version>
         <mockito.version>4.9.0</mockito.version>
